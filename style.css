@@ -1,0 +1,120 @@
+/* Supplement Pico CSS with minimal custom styles */
+
+body > main {
+  max-width: 600px;
+  padding-top: 2rem;
+  padding-bottom: 2rem;
+}
+
+header {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+header p {
+  color: var(--pico-muted-color);
+}
+
+/* Divider between geolocation and address form */
+.divider {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin: 1.5rem 0;
+  color: var(--pico-muted-color);
+}
+
+.divider::before,
+.divider::after {
+  content: "";
+  flex: 1;
+  border-top: 1px solid var(--pico-muted-border-color);
+}
+
+/* Geolocation button full-width */
+#geolocate-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+/* Call button */
+.call-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1.5rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  text-decoration: none;
+  border-radius: var(--pico-border-radius);
+  background: var(--pico-primary-background);
+  color: var(--pico-primary-inverse);
+  transition: background 0.15s;
+}
+
+.call-button:hover {
+  background: var(--pico-primary-hover-background);
+  color: var(--pico-primary-inverse);
+}
+
+/* Actions row */
+.actions {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  margin: 1rem 0;
+}
+
+.copy-btn {
+  width: 100%;
+}
+
+/* Phone toggle — de-emphasized */
+.phone-toggle {
+  all: unset;
+  display: block;
+  width: 100%;
+  text-align: center;
+  font-size: 0.8rem;
+  color: var(--pico-muted-color);
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
+.phone-toggle:hover {
+  color: var(--pico-primary);
+  text-decoration: underline;
+}
+
+/* Result card */
+.result-card header {
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.result-card footer {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+/* Error styling */
+#error {
+  border-left: 4px solid var(--pico-del-color);
+}
+
+#error p {
+  margin-bottom: 0.75rem;
+}
+
+/* Site footer */
+.site-footer {
+  text-align: center;
+  margin-top: 3rem;
+  color: var(--pico-muted-color);
+}
