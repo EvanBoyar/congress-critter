@@ -300,15 +300,20 @@
 
   // ── Hash navigation ───────────────────────────────────────────────────────
 
+  function openAndScrollTo(target) {
+    // If the section has a <details>, open it first
+    var details = target.querySelector(".section-details");
+    if (details) details.open = true;
+    setTimeout(function () {
+      target.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 50);
+  }
+
   function scrollToHash() {
     var hash = window.location.hash;
     if (!hash) return;
     var target = document.querySelector(hash);
-    if (target) {
-      setTimeout(function () {
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
-      }, 50);
-    }
+    if (target) openAndScrollTo(target);
   }
 
   // ── Main lookup flow ──────────────────────────────────────────────────────
@@ -389,5 +394,18 @@
 
   retryBtn.addEventListener("click", function () {
     if (lastAction) lastAction();
+  });
+
+  // Nav links: open collapsed sections before scrolling
+  document.querySelectorAll(".results-nav a").forEach(function (link) {
+    link.addEventListener("click", function (e) {
+      var hash = link.getAttribute("href");
+      var target = hash && document.querySelector(hash);
+      if (target) {
+        e.preventDefault();
+        history.pushState(null, "", hash);
+        openAndScrollTo(target);
+      }
+    });
   });
 })();

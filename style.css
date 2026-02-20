@@ -135,6 +135,36 @@ header p {
   margin-bottom: 0.75rem;
 }
 
+/* Collapsible sections (senators, staterep) */
+.section-details {
+  border: none;
+  padding: 0;
+}
+
+.section-details > summary {
+  list-style: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.4em;
+  margin-bottom: 0.75rem;
+}
+
+.section-details > summary::-webkit-details-marker { display: none; }
+
+.section-details > summary::after {
+  content: "›";
+  font-size: 1rem;
+  line-height: 1;
+  color: var(--pico-muted-color);
+  transition: transform 0.15s;
+  display: inline-block;
+}
+
+.section-details[open] > summary::after {
+  transform: rotate(90deg);
+}
+
 .section-loading {
   color: var(--pico-muted-color);
   font-size: 0.9rem;
