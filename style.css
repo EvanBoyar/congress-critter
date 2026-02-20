@@ -126,6 +126,11 @@ header p {
   scroll-margin-top: 1rem;
 }
 
+/* Closed collapsible sections get less breathing room */
+.result-section:has(.section-details:not([open])) {
+  margin-bottom: 0.25rem;
+}
+
 .section-title {
   font-size: 0.75rem;
   font-weight: 600;
@@ -147,6 +152,11 @@ header p {
   display: flex;
   align-items: center;
   gap: 0.4em;
+  margin-bottom: 0;
+  padding: 0.4rem 0;
+}
+
+.section-details[open] > summary {
   margin-bottom: 0.75rem;
 }
 

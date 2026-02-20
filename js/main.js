@@ -86,7 +86,9 @@
 
     function renderCallArea() {
       var office = firstOfficeWithPhone();
-      var phone = phoneMode === "primary" ? primaryPhone : (office && office.phone);
+      var phone = phoneMode === "primary"
+        ? (primaryPhone || (office && office.phone))
+        : (office && office.phone);
       var callBtn = el.querySelector(".call-btn");
       var callBtnText = el.querySelector(".call-btn-text");
       var copyBtn = el.querySelector(".copy-btn");
@@ -188,7 +190,9 @@
 
     copyBtn.addEventListener("click", function () {
       var office = firstOfficeWithPhone();
-      var phone = phoneMode === "primary" ? primaryPhone : (office && office.phone);
+      var phone = phoneMode === "primary"
+        ? (primaryPhone || (office && office.phone))
+        : (office && office.phone);
       if (!phone) return;
       navigator.clipboard.writeText(phone).then(function () {
         copyBtn.textContent = "Copied!";
@@ -216,7 +220,7 @@
   // ── Section renderers ─────────────────────────────────────────────────────
 
   function renderHouseRep(rep) {
-    var body = $("#rep .section-body");
+    var body = $("#usrep .section-body");
     body.innerHTML = "";
     var districtLabel = rep.district === 0 ? "At-Large" : "District " + rep.district;
     var card = makeCard({
@@ -288,7 +292,7 @@
   }
 
   function renderStateLegislators(result, stateAbbr) {
-    var body = $("#staterep .section-body");
+    var body = $("#stateleg .section-body");
     body.innerHTML = "";
     if (!result.upper && !result.lower) {
       body.innerHTML = "<p class='section-error'>No state legislator data found for this address.</p>";
@@ -300,10 +304,23 @@
 
   // ── Hash navigation ───────────────────────────────────────────────────────
 
+  var SECTION_IDS = ["usrep", "senators", "stateleg"];
+
   function openAndScrollTo(target) {
-    // If the section has a <details>, open it first
-    var details = target.querySelector(".section-details");
-    if (details) details.open = true;
+    // If navigating to a top-level section, close the others
+    if (SECTION_IDS.indexOf(target.id) !== -1) {
+      SECTION_IDS.forEach(function (id) {
+        var s = document.getElementById(id);
+        if (s) {
+          var d = s.querySelector(".section-details");
+          if (d) d.open = (s === target);
+        }
+      });
+    } else {
+      // Fallback: just open whatever details wraps the target
+      var details = target.querySelector(".section-details");
+      if (details) details.open = true;
+    }
     setTimeout(function () {
       target.scrollIntoView({ behavior: "smooth", block: "start" });
     }, 50);
@@ -326,13 +343,13 @@
     }
 
     showResults();
-    setSectionLoading("rep");
+    setSectionLoading("usrep");
     setSectionLoading("senators");
-    setSectionLoading("staterep");
+    setSectionLoading("stateleg");
 
     var repPromise = Legislators.findRepresentative(stateAbbr, geo.district)
       .then(renderHouseRep)
-      .catch(function (err) { setSectionError("rep", err.message); });
+      .catch(function (err) { setSectionError("usrep", err.message); });
 
     var senatorsPromise = Legislators.findSenators(stateAbbr)
       .then(renderSenators)
@@ -340,7 +357,7 @@
 
     var statePromise = StateLegislators.findStateLegislators(stateAbbr, geo.sldu, geo.sldl)
       .then(function (result) { renderStateLegislators(result, stateAbbr); })
-      .catch(function (err) { setSectionError("staterep", err.message); });
+      .catch(function (err) { setSectionError("stateleg", err.message); });
 
     Promise.allSettled([repPromise, senatorsPromise, statePromise]).then(scrollToHash);
   }
