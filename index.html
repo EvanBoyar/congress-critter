@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Congress Critter — Find & Call Your Representative</title>
+  <title>Congress Critter — Find & Call Your Representatives</title>
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
@@ -13,7 +13,7 @@
   <main class="container">
     <header>
       <h1><img src="favicon.png" alt="" class="title-icon">Congress Critter</h1>
-      <p>Find your U.S. House representative and call them in just a couple taps.</p>
+      <p>Find your representatives and call them in just a couple taps.</p>
       <p><i>No data is collected or stored. All processing is done on your device.</i></p>
     </header>
 
@@ -37,13 +37,13 @@
           autocomplete="street-address"
           required
         >
-        <button type="submit">Find My Rep</button>
+        <button type="submit">Find My Reps</button>
       </form>
     </section>
 
     <section id="status" hidden>
       <article aria-busy="true" id="loading">
-        Looking up your representative…
+        Looking up your representatives…
       </article>
       <article id="error" hidden>
         <p id="error-message"></p>
@@ -52,46 +52,42 @@
     </section>
 
     <section id="results" hidden>
-      <article class="result-card">
-        <header>
-          <h2 id="rep-name"></h2>
-          <p id="rep-details"></p>
-        </header>
+      <nav class="results-nav" aria-label="Jump to section">
+        <a href="#rep">Representative</a>
+        <a href="#senators">Senators</a>
+        <a href="#staterep">State</a>
+      </nav>
 
-        <div class="actions">
-          <a id="call-btn" class="call-button" role="button">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07 19.5 19.5 0 01-6-6A19.79 19.79 0 012.12 4.18 2 2 0 014.11 2h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L8.09 9.91a16 16 0 006 6l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/>
-            </svg>
-            <span id="call-btn-text">Call</span>
-          </a>
-          <button id="copy-phone-btn" type="button" class="secondary outline copy-btn" hidden>
-            Copy Number
-          </button>
-          <button id="phone-toggle" type="button" class="phone-toggle" hidden>
-            Switch to local office
-          </button>
-        </div>
+      <div id="rep" class="result-section">
+        <h3 class="section-title">U.S. Representative</h3>
+        <div class="section-body"></div>
+      </div>
 
-        <details id="more-info" class="more-info" hidden>
-          <summary>More info</summary>
-          <div id="more-info-content"></div>
-        </details>
-      </article>
+      <div id="senators" class="result-section">
+        <h3 class="section-title">U.S. Senators</h3>
+        <div class="section-body"></div>
+      </div>
+
+      <div id="staterep" class="result-section">
+        <h3 class="section-title">State Legislature</h3>
+        <div class="section-body"></div>
+      </div>
     </section>
 
     <footer class="site-footer">
       <small>
-        Data from
-        <a href="https://github.com/unitedstates/congress-legislators" target="_blank" rel="noopener noreferrer">unitedstates/congress-legislators</a>
-        &amp; the <a href="https://geocoding.geo.census.gov/" target="_blank" rel="noopener noreferrer">U.S. Census Geocoder</a>.
-
+        Federal data from
+        <a href="https://github.com/unitedstates/congress-legislators" target="_blank" rel="noopener noreferrer">unitedstates/congress-legislators</a>.
+        State data from <a href="https://openstates.org" target="_blank" rel="noopener noreferrer">OpenStates</a>.
+        District lookup via the <a href="https://geocoding.geo.census.gov/" target="_blank" rel="noopener noreferrer">U.S. Census Geocoder</a>.
+        No data is collected.
       </small>
     </footer>
   </main>
 
   <script src="js/geocoder.js"></script>
   <script src="js/legislators.js"></script>
+  <script src="js/state-legislators.js"></script>
   <script src="js/main.js"></script>
 </body>
 </html>

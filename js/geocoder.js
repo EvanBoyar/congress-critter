@@ -41,13 +41,12 @@ var Geocoder = (function () {
     });
   }
 
-  function extractDistrict(data) {
+  function extractGeography(data) {
     var results = data && data.result;
     if (!results) {
       throw new Error("Invalid response from Census Geocoder.");
     }
 
-    // Address endpoint nests under addressMatches, coordinates under geographies directly
     var geographies;
     if (results.addressMatches && results.addressMatches.length > 0) {
       geographies = results.addressMatches[0].geographies;
@@ -57,7 +56,7 @@ var Geocoder = (function () {
       throw new Error("Address not found. Try a more specific street address.");
     }
 
-    // Find the Congressional Districts layer — name includes the Congress number
+    // Congressional district
     var cdLayer = null;
     for (var key in geographies) {
       if (key.indexOf("Congressional Districts") !== -1) {
@@ -65,14 +64,12 @@ var Geocoder = (function () {
         break;
       }
     }
-
     if (!cdLayer || cdLayer.length === 0) {
       throw new Error("Could not determine congressional district for this location.");
     }
-
     var cd = cdLayer[0];
 
-    // Extract district number — field name varies by Congress (CD119, CD118, CDFP, CD, etc.)
+    // Extract CD field — varies by Congress (CD119, CD118, CDFP, etc.)
     var district = null;
     for (var field in cd) {
       if (/^CD\d*F?P?$/.test(field) && field !== "CDSESSN") {
@@ -84,9 +81,25 @@ var Geocoder = (function () {
       district = cd.GEOID ? cd.GEOID.slice(2) : null;
     }
 
+    // State legislative districts (upper = state senate, lower = state house)
+    var sldu = null;
+    var sldl = null;
+    for (var layerKey in geographies) {
+      if (layerKey.indexOf("State Legislative Districts - Upper") !== -1) {
+        var upperLayer = geographies[layerKey];
+        if (upperLayer && upperLayer.length > 0) sldu = upperLayer[0].SLDU || null;
+      }
+      if (layerKey.indexOf("State Legislative Districts - Lower") !== -1) {
+        var lowerLayer = geographies[layerKey];
+        if (lowerLayer && lowerLayer.length > 0) sldl = lowerLayer[0].SLDL || null;
+      }
+    }
+
     return {
       stateFips: cd.STATE,
       district: district,
+      sldu: sldu,
+      sldl: sldl,
     };
   }
 
@@ -96,7 +109,7 @@ var Geocoder = (function () {
       benchmark: BENCHMARK,
       vintage: VINTAGE,
     });
-    return jsonp(CENSUS_BASE + "/onelineaddress?" + params).then(extractDistrict);
+    return jsonp(CENSUS_BASE + "/onelineaddress?" + params).then(extractGeography);
   }
 
   function geocodeCoordinates(lat, lng) {
@@ -106,7 +119,7 @@ var Geocoder = (function () {
       benchmark: BENCHMARK,
       vintage: VINTAGE,
     });
-    return jsonp(CENSUS_BASE + "/coordinates?" + params).then(extractDistrict);
+    return jsonp(CENSUS_BASE + "/coordinates?" + params).then(extractGeography);
   }
 
   return {

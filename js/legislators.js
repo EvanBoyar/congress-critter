@@ -98,6 +98,32 @@ var Legislators = (function () {
     });
   }
 
+  function findSenators(stateAbbr) {
+    return fetchLegislators().then(function (legislators) {
+      var senators = [];
+      for (var i = 0; i < legislators.length; i++) {
+        var leg = legislators[i];
+        var current = leg.terms[leg.terms.length - 1];
+        if (current.type === "sen" && current.state === stateAbbr) {
+          var name = leg.name.official_full || (leg.name.first + " " + leg.name.last);
+          var partyMap = { D: "Democrat", R: "Republican", I: "Independent" };
+          senators.push({
+            name: name,
+            party: partyMap[current.party] || current.party,
+            rank: current.state_rank || null,
+            phone: current.phone || null,
+            website: current.url || null,
+            contactForm: current.contact_form || null,
+            dcAddress: current.address || null,
+            state: stateAbbr,
+            bioguide: leg.id.bioguide,
+          });
+        }
+      }
+      return senators;
+    });
+  }
+
   function findDistrictOffices(bioguide) {
     return fetchOffices().then(function (allOffices) {
       for (var i = 0; i < allOffices.length; i++) {
@@ -112,6 +138,7 @@ var Legislators = (function () {
   return {
     fipsToState: fipsToState,
     findRepresentative: findRepresentative,
+    findSenators: findSenators,
     findDistrictOffices: findDistrictOffices,
   };
 })();
