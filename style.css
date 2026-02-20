@@ -11,6 +11,13 @@ header {
   margin-bottom: 2rem;
 }
 
+.title-icon {
+  height: 1.2em;
+  width: auto;
+  vertical-align: middle;
+  margin-right: 0.3em;
+}
+
 header p {
   color: var(--pico-muted-color);
 }
