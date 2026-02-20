@@ -16,8 +16,8 @@
   var callBtnText = $("#call-btn-text");
   var copyPhoneBtn = $("#copy-phone-btn");
   var phoneToggle = $("#phone-toggle");
-  var repWebsite = $("#rep-website");
-  var repContact = $("#rep-contact");
+  var moreInfo = $("#more-info");
+  var moreInfoContent = $("#more-info-content");
 
   var lastAction = null;
 
@@ -69,7 +69,7 @@
       setPhone(dcPhone, "DC");
       if (localOffices.length > 0) {
         var office = localOffices[0];
-        phoneToggle.textContent = "Switch to local office (" + office.city + ", " + office.state + ")";
+        phoneToggle.textContent = "Switch to local office (" + office.city + ", " + office.state + ", not recommended)";
         phoneToggle.hidden = false;
       } else {
         phoneToggle.hidden = true;
@@ -100,29 +100,77 @@
     setPhone(dcPhone, null);
     phoneToggle.hidden = true;
 
-    // Fetch district offices in background for toggle
+    // Fetch district offices in background for toggle + more info
     Legislators.findDistrictOffices(rep.bioguide).then(function (offices) {
-      localOffices = offices;
-      if (offices.length > 0 && dcPhone) {
-        // Show toggle only if we have both DC and local phones
-        var office = offices[0];
-        phoneToggle.textContent = "Switch to local office (" + office.city + ", " + office.state + ")";
+      // Filter to offices with phones for the phone toggle
+      localOffices = offices.filter(function (o) { return !!o.phone; });
+      if (localOffices.length > 0 && dcPhone) {
+        var office = localOffices[0];
+        phoneToggle.textContent = "Switch to local office (" + office.city + ", " + office.state + ", not recommended)";
         phoneToggle.hidden = false;
       }
-    });
 
+      renderMoreInfo(rep, offices);
+    });
+  }
+
+  function formatAddress(parts) {
+    return parts.filter(Boolean).join(", ");
+  }
+
+  function renderMoreInfo(rep, offices) {
+    var html = "";
+
+    // Links
+    var links = [];
     if (rep.website) {
-      repWebsite.href = rep.website;
-      repWebsite.hidden = false;
-    } else {
-      repWebsite.hidden = true;
+      links.push('<a href="' + rep.website + '" target="_blank" rel="noopener noreferrer">Website</a>');
+    }
+    if (rep.contactForm) {
+      links.push('<a href="' + rep.contactForm + '" target="_blank" rel="noopener noreferrer">Contact form</a>');
+    }
+    if (links.length > 0) {
+      html += "<p>" + links.join(" · ") + "</p>";
     }
 
-    if (rep.contactForm) {
-      repContact.href = rep.contactForm;
-      repContact.hidden = false;
+    // DC office
+    if (rep.dcAddress || rep.phone) {
+      html += "<h4>DC Office</h4>";
+      html += "<p>";
+      if (rep.dcAddress) html += rep.dcAddress;
+      if (rep.phone) {
+        if (rep.dcAddress) html += "<br>";
+        html += '<a href="tel:' + rep.phone + '">' + rep.phone + "</a>";
+      }
+      html += "</p>";
+    }
+
+    // Local offices
+    if (offices.length > 0) {
+      html += "<h4>Local Office" + (offices.length > 1 ? "s" : "") + "</h4>";
+      for (var i = 0; i < offices.length; i++) {
+        var o = offices[i];
+        var addr = formatAddress([
+          o.address,
+          o.suite,
+          o.building,
+          o.city + ", " + o.state + " " + o.zip
+        ]);
+        html += "<p>";
+        html += addr;
+        if (o.phone) {
+          html += '<br><a href="tel:' + o.phone + '">' + o.phone + "</a>";
+        }
+        html += "</p>";
+      }
+    }
+
+    if (html) {
+      moreInfoContent.innerHTML = html;
+      moreInfo.hidden = false;
+      moreInfo.removeAttribute("open");
     } else {
-      repContact.hidden = true;
+      moreInfo.hidden = true;
     }
   }
 

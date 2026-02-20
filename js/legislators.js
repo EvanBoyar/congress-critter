@@ -90,6 +90,7 @@ var Legislators = (function () {
         phone: current.phone || null,
         website: current.url || null,
         contactForm: current.contact_form || null,
+        dcAddress: current.address || null,
         district: districtNum,
         state: stateAbbr,
         bioguide: bioguide,
@@ -101,9 +102,7 @@ var Legislators = (function () {
     return fetchOffices().then(function (allOffices) {
       for (var i = 0; i < allOffices.length; i++) {
         if (allOffices[i].id.bioguide === bioguide) {
-          var offices = allOffices[i].offices || [];
-          // Return only offices that have a phone number
-          return offices.filter(function (o) { return !!o.phone; });
+          return allOffices[i].offices || [];
         }
       }
       return [];

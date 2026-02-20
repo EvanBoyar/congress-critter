@@ -103,6 +103,30 @@ header p {
   flex-wrap: wrap;
 }
 
+/* More info — de-emphasized collapsible */
+.more-info {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: var(--pico-muted-color);
+}
+
+.more-info summary {
+  cursor: pointer;
+  font-size: 0.8rem;
+  color: var(--pico-muted-color);
+}
+
+.more-info h4 {
+  font-size: 0.85rem;
+  margin-top: 0.75rem;
+  margin-bottom: 0.25rem;
+  color: var(--pico-color);
+}
+
+.more-info p {
+  margin-bottom: 0.5rem;
+}
+
 /* Error styling */
 #error {
   border-left: 4px solid var(--pico-del-color);
