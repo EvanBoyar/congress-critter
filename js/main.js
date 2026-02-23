@@ -14,15 +14,17 @@
   var lastAction = null;
   var cardSeq = 0;
 
-  // Territories have non-voting delegates (district 0) and no senators
+  // Territories have non-voting delegates (district 0) and no US senators.
+  // PR is excluded from NO_STATE_LEG because OpenStates has its legislature data.
   var TERRITORY_STATES = { AS: 1, GU: 1, MP: 1, PR: 1, VI: 1 };
+  var NO_STATE_LEG = { AS: 1, GU: 1, MP: 1, VI: 1 };
 
+  // PR geocodes fine through Census (returns real SLDU/SLDL), so exclude it here.
   function detectTerritoryFips(address) {
     var a = address.toLowerCase();
     if (/\bamerican samoa\b/.test(a) || /\b96799\b/.test(a)) return '60';
     if (/\bguam\b/.test(a) || /\b969[0-4]\d\b/.test(a)) return '66';
     if (/\bnorthern mariana\b|\bcnmi\b|\bsaipan\b/.test(a) || /\b969(50|51|52)\b/.test(a)) return '69';
-    if (/\bpuerto rico\b/.test(a)) return '72';
     if (/\bvirgin islands?\b|\busvi\b/.test(a) || /\b008\d\d\b/.test(a)) return '78';
     return null;
   }
@@ -31,7 +33,6 @@
     if (lat >= -14.6 && lat <= -11.0 && lon >= -173.0 && lon <= -168.1) return '60'; // AS
     if (lat >= 13.2 && lat <= 13.7 && lon >= 144.6 && lon <= 145.1) return '66';    // GU
     if (lat >= 14.0 && lat <= 20.6 && lon >= 144.9 && lon <= 146.2) return '69';    // MP
-    if (lat >= 17.9 && lat <= 18.6 && lon >= -67.3 && lon <= -65.2) return '72';    // PR
     if (lat >= 17.6 && lat <= 18.4 && lon >= -65.1 && lon <= -64.5) return '78';    // VI
     return null;
   }
@@ -365,15 +366,20 @@
     }
 
     var isTerritory = stateAbbr in TERRITORY_STATES;
+    var noStateLeg = stateAbbr in NO_STATE_LEG;
 
     showResults();
     setSectionLoading("usrep");
 
     if (isTerritory) {
       setSectionError("senators", "U.S. territories do not have senators.");
-      setSectionError("stateleg", "Local legislature data is not available for U.S. territories.");
     } else {
       setSectionLoading("senators");
+    }
+
+    if (noStateLeg) {
+      setSectionError("stateleg", "Local legislature data is not available for U.S. territories.");
+    } else {
       setSectionLoading("stateleg");
     }
 
@@ -387,7 +393,7 @@
           .then(renderSenators)
           .catch(function (err) { setSectionError("senators", err.message); });
 
-    var statePromise = isTerritory
+    var statePromise = noStateLeg
       ? Promise.resolve()
       : StateLegislators.findStateLegislators(stateAbbr, geo.sldu, geo.sldl)
           .then(function (result) { renderStateLegislators(result, stateAbbr); })
