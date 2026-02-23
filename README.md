@@ -1,6 +1,6 @@
 # Congress Critter
 
-Find your U.S. Representative, U.S. Senators, and state legislators, and call them in a couple taps.
+Find and call your U.S. Representative, U.S. Senators, and state legislators in a couple taps.
 
 **https://evanboyar.github.io/congress-critter/**
 
