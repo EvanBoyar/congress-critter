@@ -14,6 +14,28 @@
   var lastAction = null;
   var cardSeq = 0;
 
+  // Territories have non-voting delegates (district 0) and no senators
+  var TERRITORY_STATES = { AS: 1, GU: 1, MP: 1, PR: 1, VI: 1 };
+
+  function detectTerritoryFips(address) {
+    var a = address.toLowerCase();
+    if (/\bamerican samoa\b/.test(a) || /\b96799\b/.test(a)) return '60';
+    if (/\bguam\b/.test(a) || /\b969[0-4]\d\b/.test(a)) return '66';
+    if (/\bnorthern mariana\b|\bcnmi\b|\bsaipan\b/.test(a) || /\b969(50|51|52)\b/.test(a)) return '69';
+    if (/\bpuerto rico\b/.test(a)) return '72';
+    if (/\bvirgin islands?\b|\busvi\b/.test(a) || /\b008\d\d\b/.test(a)) return '78';
+    return null;
+  }
+
+  function detectTerritoryFipsByCoords(lat, lon) {
+    if (lat >= -14.6 && lat <= -11.0 && lon >= -173.0 && lon <= -168.1) return '60'; // AS
+    if (lat >= 13.2 && lat <= 13.7 && lon >= 144.6 && lon <= 145.1) return '66';    // GU
+    if (lat >= 14.0 && lat <= 20.6 && lon >= 144.9 && lon <= 146.2) return '69';    // MP
+    if (lat >= 17.9 && lat <= 18.6 && lon >= -67.3 && lon <= -65.2) return '72';    // PR
+    if (lat >= 17.6 && lat <= 18.4 && lon >= -65.1 && lon <= -64.5) return '78';    // VI
+    return null;
+  }
+
   // ── Loading / error states ────────────────────────────────────────────────
 
   function showLoading() {
@@ -342,22 +364,34 @@
       return;
     }
 
+    var isTerritory = stateAbbr in TERRITORY_STATES;
+
     showResults();
     setSectionLoading("usrep");
-    setSectionLoading("senators");
-    setSectionLoading("stateleg");
+
+    if (isTerritory) {
+      setSectionError("senators", "U.S. territories do not have senators.");
+      setSectionError("stateleg", "Local legislature data is not available for U.S. territories.");
+    } else {
+      setSectionLoading("senators");
+      setSectionLoading("stateleg");
+    }
 
     var repPromise = Legislators.findRepresentative(stateAbbr, geo.district)
       .then(renderHouseRep)
       .catch(function (err) { setSectionError("usrep", err.message); });
 
-    var senatorsPromise = Legislators.findSenators(stateAbbr)
-      .then(renderSenators)
-      .catch(function (err) { setSectionError("senators", err.message); });
+    var senatorsPromise = isTerritory
+      ? Promise.resolve()
+      : Legislators.findSenators(stateAbbr)
+          .then(renderSenators)
+          .catch(function (err) { setSectionError("senators", err.message); });
 
-    var statePromise = StateLegislators.findStateLegislators(stateAbbr, geo.sldu, geo.sldl)
-      .then(function (result) { renderStateLegislators(result, stateAbbr); })
-      .catch(function (err) { setSectionError("stateleg", err.message); });
+    var statePromise = isTerritory
+      ? Promise.resolve()
+      : StateLegislators.findStateLegislators(stateAbbr, geo.sldu, geo.sldl)
+          .then(function (result) { renderStateLegislators(result, stateAbbr); })
+          .catch(function (err) { setSectionError("stateleg", err.message); });
 
     Promise.allSettled([repPromise, senatorsPromise, statePromise]).then(scrollToHash);
   }
@@ -371,7 +405,12 @@
       });
     })
       .then(function (pos) {
-        return Geocoder.geocodeCoordinates(pos.coords.latitude, pos.coords.longitude);
+        var lat = pos.coords.latitude, lon = pos.coords.longitude;
+        var terFips = detectTerritoryFipsByCoords(lat, lon);
+        if (terFips) {
+          return { stateFips: terFips, district: '00', sldu: null, sldl: null };
+        }
+        return Geocoder.geocodeCoordinates(lat, lon);
       })
       .then(runLookup)
       .catch(function (err) {
@@ -389,6 +428,11 @@
 
   function lookupByAddress(address) {
     showLoading();
+    var terFips = detectTerritoryFips(address);
+    if (terFips) {
+      runLookup({ stateFips: terFips, district: '00', sldu: null, sldl: null });
+      return;
+    }
     Geocoder.geocodeAddress(address)
       .then(runLookup)
       .catch(function (err) { showError(err.message); });
