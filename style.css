@@ -514,7 +514,7 @@ article.result-card header {
   box-shadow: none;
 }
 
-/* Copy button — Pico assigns classes "secondary outline" which we override */
+/* Copy button */
 .copy-btn {
   width: 100%;
   padding: 0.4rem 0.9rem;

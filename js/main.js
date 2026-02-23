@@ -200,7 +200,7 @@
         '<a class="call-btn call-button" role="button" hidden>' +
           PHONE_SVG + '<span class="call-btn-text">Call</span>' +
         "</a>" +
-        '<button class="copy-btn secondary outline" type="button" hidden>Copy Number</button>' +
+        '<button class="copy-btn" type="button" hidden>Copy Number</button>' +
         '<button class="phone-toggle" type="button" hidden>Switch to local office</button>' +
       "</div>" +
       '<details class="more-info">' +
