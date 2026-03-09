@@ -402,6 +402,28 @@
     Promise.allSettled([repPromise, senatorsPromise, statePromise]).then(scrollToHash);
   }
 
+  function reverseGeocode(lat, lon) {
+    var url = "https://nominatim.openstreetmap.org/reverse?lat=" +
+      encodeURIComponent(lat) + "&lon=" + encodeURIComponent(lon) +
+      "&format=json&addressdetails=1";
+    return fetch(url, { headers: { "Accept": "application/json" } })
+      .then(function (r) { return r.json(); })
+      .then(function (data) {
+        if (data && data.address) {
+          var a = data.address;
+          var parts = [
+            a.house_number && a.road ? a.house_number + " " + a.road : a.road,
+            a.city || a.town || a.village || a.hamlet,
+            a.state,
+            a.postcode,
+          ];
+          return parts.filter(Boolean).join(", ");
+        }
+        return null;
+      })
+      .catch(function () { return null; });
+  }
+
   function lookupByCoordinates() {
     showLoading();
     new Promise(function (resolve, reject) {
@@ -412,6 +434,12 @@
     })
       .then(function (pos) {
         var lat = pos.coords.latitude, lon = pos.coords.longitude;
+
+        // Reverse-geocode to populate address input (best-effort, non-blocking)
+        reverseGeocode(lat, lon).then(function (addr) {
+          if (addr) addressInput.value = addr;
+        });
+
         var terFips = detectTerritoryFipsByCoords(lat, lon);
         if (terFips) {
           return { stateFips: terFips, district: '00', sldu: null, sldl: null };
