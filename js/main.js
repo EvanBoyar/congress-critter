@@ -6,6 +6,7 @@
   var addressInput = $("#address-input");
   var statusSection = $("#status");
   var loadingEl = $("#loading");
+  var loadingMsg = $("#loading-message");
   var errorEl = $("#error");
   var errorMsg = $("#error-message");
   var retryBtn = $("#retry-btn");
@@ -39,12 +40,17 @@
 
   // ── Loading / error states ────────────────────────────────────────────────
 
-  function showLoading() {
+  function showLoading(msg) {
     statusSection.hidden = false;
     loadingEl.hidden = false;
+    loadingMsg.textContent = msg || "Looking up your representatives\u2026";
     errorEl.hidden = true;
     resultsSection.hidden = true;
     geolocateBtn.setAttribute("aria-busy", "true");
+  }
+
+  function setLoadingText(msg) {
+    loadingMsg.textContent = msg;
   }
 
   function showError(msg) {
@@ -424,8 +430,18 @@
       .catch(function () { return null; });
   }
 
+  function geocodeWithRetry(geocodeFn) {
+    return geocodeFn().catch(function (err) {
+      if (err.message && err.message.indexOf("timed out") !== -1) {
+        setLoadingText("Census Geocoder was slow. Retrying\u2026");
+        return geocodeFn();
+      }
+      throw err;
+    });
+  }
+
   function lookupByCoordinates() {
-    showLoading();
+    showLoading("Requesting your location\u2026");
     new Promise(function (resolve, reject) {
       navigator.geolocation.getCurrentPosition(resolve, reject, {
         timeout: 10000,
@@ -434,6 +450,7 @@
     })
       .then(function (pos) {
         var lat = pos.coords.latitude, lon = pos.coords.longitude;
+        setLoadingText("Location found. Looking up your district\u2026");
 
         // Reverse-geocode to populate address input (best-effort, non-blocking)
         reverseGeocode(lat, lon).then(function (addr) {
@@ -444,16 +461,20 @@
         if (terFips) {
           return { stateFips: terFips, district: '00', sldu: null, sldl: null };
         }
-        return Geocoder.geocodeCoordinates(lat, lon);
+        return geocodeWithRetry(function () {
+          return Geocoder.geocodeCoordinates(lat, lon);
+        });
       })
       .then(runLookup)
       .catch(function (err) {
         if (err.code === 1) {
-          showError("Location access denied. Please type your address instead.");
+          showError("Location access was denied by your browser. Please type your address instead.");
         } else if (err.code === 2) {
-          showError("Location unavailable. Please type your address instead.");
+          showError("Your device could not determine its location. Please type your address instead.");
         } else if (err.code === 3) {
-          showError("Location request timed out. Please type your address instead.");
+          showError("Your browser took too long to find your location. Please type your address instead.");
+        } else if (err.message && err.message.indexOf("Census") !== -1) {
+          showError("The Census district lookup service is not responding. Please try again in a moment, or type your address to retry.");
         } else {
           showError(err.message);
         }
@@ -461,15 +482,23 @@
   }
 
   function lookupByAddress(address) {
-    showLoading();
+    showLoading("Looking up your district\u2026");
     var terFips = detectTerritoryFips(address);
     if (terFips) {
       runLookup({ stateFips: terFips, district: '00', sldu: null, sldl: null });
       return;
     }
-    Geocoder.geocodeAddress(address)
+    geocodeWithRetry(function () {
+      return Geocoder.geocodeAddress(address);
+    })
       .then(runLookup)
-      .catch(function (err) { showError(err.message); });
+      .catch(function (err) {
+        if (err.message && err.message.indexOf("Census") !== -1) {
+          showError("The Census district lookup service is not responding. Please try again in a moment.");
+        } else {
+          showError(err.message);
+        }
+      });
   }
 
   // ── Event wiring ──────────────────────────────────────────────────────────
