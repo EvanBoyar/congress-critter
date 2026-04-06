@@ -12,6 +12,8 @@
   var retryBtn = $("#retry-btn");
   var resultsSection = $("#results");
 
+  Autocomplete.attach(addressInput);
+
   var lastAction = null;
   var cardSeq = 0;
 

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Congress Critter — Find & Call Your Representatives</title>
+  <title>Congress Critter: Find & Call Your Representatives</title>
   <link rel="icon" type="image/png" href="favicon.png">
   <link rel="icon" type="image/x-icon" href="favicon.ico">
   <link rel="stylesheet" href="style.css">
@@ -32,7 +32,7 @@
           id="address-input"
           name="address"
           placeholder="Enter your street address, city, and state"
-          autocomplete="street-address"
+          autocomplete="off"
           required
         >
         <button type="submit">Find My Officials</button>
@@ -85,11 +85,13 @@
         State data from <a href="https://openstates.org" target="_blank" rel="noopener noreferrer">OpenStates</a>.
         District lookup via the <a href="https://geocoding.geo.census.gov/" target="_blank" rel="noopener noreferrer">U.S. Census Geocoder</a>.
         Address lookup via <a href="https://nominatim.openstreetmap.org/" target="_blank" rel="noopener noreferrer">OpenStreetMap Nominatim</a>.
+        Address suggestions by <a href="https://photon.komoot.io/" target="_blank" rel="noopener noreferrer">Photon</a>.
         Help make more excellent stuff exist by <a href="https://www.linkedin.com/in/evanboyar/" target=_blank rel="noopener noreferrer">connecting with me.</a>
       </small>
     </footer>
   </main>
 
+  <script src="js/autocomplete.js"></script>
   <script src="js/geocoder.js"></script>
   <script src="js/legislators.js"></script>
   <script src="js/state-legislators.js"></script>
