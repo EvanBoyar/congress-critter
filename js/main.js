@@ -298,13 +298,19 @@
     });
   }
 
-  function renderStateCard(body, leg, title) {
+  function districtLabelFor(leg) {
+    if (leg.district === 0) return "At-Large";
+    if (typeof leg.district === "number") return "District " + leg.district;
+    return String(leg.district);
+  }
+
+  function renderStateCard(body, leg, title, districtOverride) {
     if (!leg) {
       body.insertAdjacentHTML("beforeend",
         "<p class='section-error'>No " + esc(title) + " data found for this district.</p>");
       return;
     }
-    var districtLabel = leg.district === 0 ? "At-Large" : "District " + leg.district;
+    var districtLabel = districtOverride || districtLabelFor(leg);
     var localOffice = leg.district_phone
       ? [{ phone: leg.district_phone, address: leg.district_address }]
       : [];
@@ -322,15 +328,45 @@
     body.appendChild(card.el);
   }
 
+  function renderChamberHeading(body, chamberName, classLabel) {
+    var html = '<h3 class="chamber-heading">' + esc(chamberName);
+    if (classLabel) {
+      html += ' <span class="chamber-class">\u00b7 ' + esc(classLabel) + "</span>";
+    }
+    html += "</h3>";
+    body.insertAdjacentHTML("beforeend", html);
+  }
+
   function renderStateLegislators(result, stateAbbr) {
     var body = $("#stateleg .section-body");
     body.innerHTML = "";
-    if (!result.upper && !result.lower) {
+    var atLarge = result.atLarge || [];
+    if (!result.upper && !result.lower && !atLarge.length) {
       body.innerHTML = "<p class='section-error'>No state legislator data found for this address.</p>";
       return;
     }
-    renderStateCard(body, result.upper, "State Senator");
-    renderStateCard(body, result.lower, "State Representative");
+
+    var unicameral = StateLegislators.isUnicameral(stateAbbr);
+    var upperInfo = StateLegislators.chamberInfo(stateAbbr, "upper");
+    renderChamberHeading(body, upperInfo.name, unicameral ? null : "Upper House");
+    renderStateCard(body, result.upper, upperInfo.title);
+
+    if (atLarge.length) {
+      renderChamberHeading(body, "Citywide", null);
+      atLarge.forEach(function (leg) {
+        if (leg.district === "Chairman") {
+          renderStateCard(body, leg, "Council Chair", "Citywide");
+        } else {
+          renderStateCard(body, leg, upperInfo.title);
+        }
+      });
+    }
+
+    if (!unicameral) {
+      var lowerInfo = StateLegislators.chamberInfo(stateAbbr, "lower");
+      renderChamberHeading(body, lowerInfo.name, "Lower House");
+      renderStateCard(body, result.lower, lowerInfo.title);
+    }
   }
 
   // ── Hash navigation ───────────────────────────────────────────────────────
@@ -357,11 +393,22 @@
     }, 50);
   }
 
+  function setSelectedChip(hash) {
+    document.querySelectorAll(".results-nav a").forEach(function (link) {
+      if (link.getAttribute("href") === hash) {
+        link.setAttribute("aria-current", "location");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    });
+  }
+
   function scrollToHash() {
     var hash = window.location.hash;
+    setSelectedChip(hash);
     if (!hash) return;
     var target = document.querySelector(hash);
-    if (target) openAndScrollTo(target);
+    if (target && !resultsSection.hidden) openAndScrollTo(target);
   }
 
   // ── Main lookup flow ──────────────────────────────────────────────────────
@@ -522,16 +569,35 @@
     if (lastAction) lastAction();
   });
 
-  // Nav links: open collapsed sections before scrolling
+  // Nav chips: highlight + (when results are visible) scroll to section.
+  // Pre-results, a click just records intent — runLookup's scrollToHash
+  // will route to the chosen section once results render.
   document.querySelectorAll(".results-nav a").forEach(function (link) {
     link.addEventListener("click", function (e) {
+      e.preventDefault();
       var hash = link.getAttribute("href");
-      var target = hash && document.querySelector(hash);
-      if (target) {
-        e.preventDefault();
-        history.pushState(null, "", hash);
-        openAndScrollTo(target);
+      if (!hash) return;
+      history.pushState(null, "", hash);
+      setSelectedChip(hash);
+      if (!resultsSection.hidden) {
+        var target = document.querySelector(hash);
+        if (target) openAndScrollTo(target);
       }
     });
+  });
+
+  // When a section is opened directly via its own summary, sync the chip.
+  SECTION_IDS.forEach(function (id) {
+    var details = document.querySelector("#" + id + " .section-details");
+    if (!details) return;
+    details.addEventListener("toggle", function () {
+      if (details.open) setSelectedChip("#" + id);
+    });
+  });
+
+  // Sync chip with URL hash on initial load and on back/forward nav.
+  if (window.location.hash) setSelectedChip(window.location.hash);
+  window.addEventListener("hashchange", function () {
+    setSelectedChip(window.location.hash);
   });
 })();
